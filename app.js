@@ -4,6 +4,13 @@ var server = udp.createSocket('udp4');
 var id = process.argv[2]
 var port = process.argv[3]
 
+var os = require( 'os' );
+
+var ip = require('./ip')
+
+var networkInterfaces = os.networkInterfaces( );
+
+
 server.on('error',function(error){
     console.log('Error: ' + error);
     server.close();
@@ -16,6 +23,13 @@ server.on('listening',function(){
     var ipaddr = address.address;
     console.log('Server is listening at port: ' + port);
     console.log('Server ip: ' + ipaddr);
+
+    server.setBroadcast(true)
+    server.setMulticastTTL(128); 
+    server.addMembership('230.185.192.108', "127.0.0.1");
+
+    console.log( ip.address() );
+
 });
 
 
