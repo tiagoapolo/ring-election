@@ -1,6 +1,9 @@
 var udp = require('dgram');
 var ip = require('./ip');
-var buffer = require('buffer');
+
+var ID = process.argv[2];
+var HOST = process.argv[3] || ip.address();
+var PORT = process.argv[4] || 2222
 
 // creating a client socket
 var client = udp.createSocket('udp4');
@@ -23,7 +26,7 @@ client.on('listening', function () {
     client.addMembership('230.185.192.108',ip.address());
 })
 
-client.bind(3333);
+// client.bind(3333);
 
 //sending msg
 client.send(data, 2222, '230.185.192.108', function (error) {

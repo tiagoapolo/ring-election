@@ -1,75 +1,25 @@
 var udp = require('dgram');
 var ip = require('./ip');
-// --------------------creating a udp server --------------------
 
-// creating a udp server
-var server = udp.createSocket('udp4');
+var ID = process.pid
+var HOST = process.argv[2] || ip.address();
+var PORT = process.argv[3] || 2222
+var MULTICAST = process.argv[4] || '230.185.192.108'
 
-// emits when any error occurs
-server.on('error', function (error) {
-    console.log('Error: ' + error);
-    server.close();
-});
+var lider = null
+var node = udp.createSocket('udp4');
 
-// emits on new datagram msg
-server.on('message', function (msg, info) {
-    console.log('Data received from client : ' + msg.toString());
-    console.log('Received %d bytes from %s:%d\n', msg.length, info.address, info.port);
-
-    //sending msg
-    // server.send(Buffer.from('Received'), info.port, '230.185.192.108', function (error) {
-    //     if (error) {
-    //         client.close();
-    //     } else {
-    //         console.log('Data sent !!!');
-    //     }
-
-    // });
-
-});
-
-//emits when socket is ready and listening for datagram msgs
-server.on('listening', function () {
-    var address = server.address();
-    var port = address.port;
-    var family = address.family;
-    var ipaddr = address.address;
-    console.log('Server is listening at port' + port);
-    console.log('Server ip :' + ipaddr);
-    console.log('Server is IP4/IP6 : ' + family);
-
-    server.setBroadcast(true)
-    server.setMulticastTTL(128); 
-    // server.setMulticastInterface(ip.address())
-    server.addMembership('230.185.192.108',ip.address());
-
-});
-
-//emits after the socket is closed using socket.close();
-server.on('close', function () {
-    console.log('Socket is closed !');
-});
-
-server.bind(2222);
+console.log('\nCreating...')
+console.log('\n--------- NODE INFO -----------')
+console.log('ID: ', ID)
+console.log('HOST: ', HOST)
+console.log('PORT: ', PORT)
+console.log('MULTICAST: ', MULTICAST)
+console.log('-------------------------------\n')
 
 
 function callElection(){
-
-    //sending msg
-    server.send(Buffer.from('hello'), 2222, '192.168.56.1', function(error){
-        
-        if(error){
-            client.close();
-        }else{
-            console.log('Data sent !!!');
-        }
-
-    });
-
-}
-
-function tellEveryone(){
-
+    sendMulticast('ELECTION')
 }
 
 function respondElection(){
@@ -79,3 +29,88 @@ function respondElection(){
 function tellNextHop(){
 
 }
+
+function whoIsLeader(){
+    if(lider === null)
+        callElection()
+}
+
+function notifyNodes(){
+    if(lider === ID)
+        sendMulticast('LIDER:'+ID)
+}
+
+
+function sendMulticast(msg){
+    node.send(Buffer.from(msg), PORT, MULTICAST, function(error){
+        if(error){
+            console.log('Message: '+msg+'\nStatus: '+error);
+            client.close();
+        }else{
+            console.log('Message: '+msg+'\nStatus: SENT');
+        }
+    });
+}
+
+function sendMessageToAddr(msg, host, port){
+    node.send(Buffer.from(msg), port, host, function(error){
+        if(error){
+            console.log('Message: '+msg+'\nStatus: '+error);
+            client.close();
+        }else{
+            console.log('Message: '+msg+'\nStatus: SENT');
+        }
+    });
+}
+
+// emits when any error occurs
+node.on('error', function (error) {
+    console.log('Error: ' + error);
+    node.close();
+});
+
+// emits on new datagram msg
+node.on('message', function (msg, info) {
+    
+    console.log('\n-------------------------')
+    console.log('Data received : ' + msg.toString());
+    console.log('Received from %s:%d\n', info.address, info.port);
+    console.log('-------------------------\n')
+
+    let message = msg.toString().toLowerCase()
+
+    if(message === 'election') {
+        
+    } else if (message === 'lider'){
+        lider = message.split(':')[1] || null
+    }
+
+});
+
+//emits when socket is ready and listening for datagram msgs
+node.on('listening', function () {
+    let address = node.address();
+    let port = address.port;
+    let family = address.family;
+    let ipaddr = address.address;    
+
+    node.setBroadcast(true)
+    node.setMulticastTTL(128); 
+    node.addMembership(MULTICAST, HOST);
+
+    console.log('Node is UP...\n');
+
+});
+
+//emits after the socket is closed using socket.close();
+node.on('close', function () {
+    console.log('Socket is closed !');
+});
+
+
+setInterval(notifyNodes, 30000)
+setInterval(whoIsLeader, 60000)
+
+node.bind(PORT);
+
+

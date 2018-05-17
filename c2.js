@@ -2,6 +2,8 @@ var udp = require('dgram');
 var ip = require('./ip');
 var buffer = require('buffer');
 
+
+
 // creating a client socket
 var client = udp.createSocket('udp4');
 
@@ -26,7 +28,7 @@ client.on('listening', function () {
 })
 
 
-client.bind(4444);
+client.bind(2222);
 
 //sending msg
 client.send(data, 2222, '230.185.192.108', function (error) {
