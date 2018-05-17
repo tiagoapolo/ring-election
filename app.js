@@ -1,12 +1,11 @@
 var udp = require('dgram');
 var server = udp.createSocket('udp4');
 
-var id = process.argv[2]
-var port = process.argv[3]
+var id = process.argv[2];
+var port = process.argv[3] || 2222;
 
 var os = require( 'os' );
-
-var ip = require('./ip')
+var ip = require('./ip');
 
 var networkInterfaces = os.networkInterfaces( );
 
@@ -23,30 +22,30 @@ server.on('listening',function(){
     var ipaddr = address.address;
     console.log('Server is listening at port: ' + port);
     console.log('Server ip: ' + ipaddr);
+    console.log('Local ip: ', ip.address())
 
     server.setBroadcast(true)
     server.setMulticastTTL(128); 
-    server.addMembership('230.185.192.108', "127.0.0.1");
-
-    console.log( ip.address() );
-
+    server.addMembership('230.185.192.108', ip.address());
+    
 });
 
 
 // emits on new datagram msg
 server.on('message',function(msg,info){
+    
     console.log('Data received from client : ' + msg.toString());
     console.log('Received %d bytes from %s:%d\n',msg.length, info.address, info.port);
 
-//sending msg
-    server.send(msg,info.port,'localhost',function(error){
-        if(error){
-            client.close();
-        }else{
-            console.log('Data sent !!!');
-        }
+    //sending msg
+    // server.send(msg,info.port,'localhost',function(error){
+    //     if(error){
+    //         client.close();
+    //     }else{
+    //         console.log('Data sent !!!');
+    //     }
 
-    });
+    // });
 
 });
 
@@ -61,7 +60,7 @@ server.bind(parseInt(port) || 2222);
 function callElection(){
 
     //sending msg
-    server.send(msg,info.port,'localhost', function(error){
+    server.send(Buffer.from('hello'),3333,'230.185.192.108', function(error){
         
         if(error){
             client.close();
@@ -84,3 +83,6 @@ function respondElection(){
 function tellNextHop(){
 
 }
+
+
+setInterval(callElection, 3000);
