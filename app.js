@@ -4,10 +4,8 @@ var server = udp.createSocket('udp4');
 var id = process.argv[2];
 var port = process.argv[3] || 2222;
 
-var os = require( 'os' );
 var ip = require('./ip');
-
-var networkInterfaces = os.networkInterfaces( );
+var HOST = ip.address()
 
 
 server.on('error',function(error){
@@ -24,9 +22,9 @@ server.on('listening',function(){
     console.log('Server ip: ' + ipaddr);
     console.log('Local ip: ', ip.address())
 
-    server.setBroadcast(true)
-    server.setMulticastTTL(128); 
-    server.addMembership('230.185.192.108', ip.address());
+    // server.setBroadcast(true)
+    // server.setMulticastTTL(128); 
+    // server.addMembership('230.185.192.108', ip.address());
     
 });
 
@@ -60,7 +58,7 @@ server.bind(parseInt(port) || 2222);
 function callElection(){
 
     //sending msg
-    server.send(Buffer.from('hello'),3333,'230.185.192.108', function(error){
+    server.send(Buffer.from('hello'),2222, '192.168.56.1', function(error){
         
         if(error){
             client.close();

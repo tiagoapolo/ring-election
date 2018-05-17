@@ -27,4 +27,4 @@ client.on('message', function (message, remote) {
     console.log('B: From: ' + remote.address + ':' + remote.port +' - ' + message);
 });
 
-client.bind(PORT, HOST);
+client.bind(PORT);
